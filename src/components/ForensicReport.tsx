@@ -1,15 +1,16 @@
 import { motion } from "framer-motion";
-import { 
-  AlertTriangle, 
-  CheckCircle2, 
-  Brain, 
-  Activity, 
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Brain,
+  Activity,
   Fingerprint,
   Waves,
   Download,
   Shield,
   Eye
 } from "lucide-react";
+import { generateCertificate } from "@/utils/certificateGenerator";
 import { Button } from "@/components/ui/button";
 import {
   LineChart,
@@ -111,7 +112,10 @@ export const ForensicReport = ({ result }: ForensicReportProps) => {
               <Download className="w-4 h-4 mr-2" />
               Export Report
             </Button>
-            <Button className="bg-primary text-primary-foreground">
+            <Button
+              className="bg-primary text-primary-foreground"
+              onClick={() => generateCertificate(result)}
+            >
               <Shield className="w-4 h-4 mr-2" />
               Get Certificate
             </Button>
@@ -129,11 +133,10 @@ export const ForensicReport = ({ result }: ForensicReportProps) => {
               initial={{ width: 0 }}
               animate={{ width: `${result.confidence}%` }}
               transition={{ duration: 1, ease: "easeOut" }}
-              className={`h-full rounded-full ${
-                result.isDeepfake 
-                  ? "bg-gradient-to-r from-destructive to-warning" 
-                  : "bg-gradient-to-r from-primary to-success"
-              }`}
+              className={`h-full rounded-full ${result.isDeepfake
+                ? "bg-gradient-to-r from-destructive to-warning"
+                : "bg-gradient-to-r from-primary to-success"
+                }`}
             />
           </div>
         </div>
@@ -176,11 +179,10 @@ export const ForensicReport = ({ result }: ForensicReportProps) => {
           <div className="flex items-center gap-3 mb-6">
             <Activity className="w-5 h-5 text-primary" />
             <h3 className="text-lg font-semibold text-foreground">Biological Pulse Detection</h3>
-            <span className={`ml-auto text-sm px-3 py-1 rounded-full ${
-              result.biologicalScore > 70 
-                ? "bg-success/20 text-success" 
-                : "bg-destructive/20 text-destructive"
-            }`}>
+            <span className={`ml-auto text-sm px-3 py-1 rounded-full ${result.biologicalScore > 70
+              ? "bg-success/20 text-success"
+              : "bg-destructive/20 text-destructive"
+              }`}>
               {result.biologicalScore > 70 ? "Normal" : "Anomaly Detected"}
             </span>
           </div>
@@ -312,9 +314,9 @@ export const ForensicReport = ({ result }: ForensicReportProps) => {
                   transition={{ duration: 1, delay: index * 0.1 }}
                   className={`h-full rounded-full bg-${item.color}`}
                   style={{
-                    backgroundColor: index === 0 ? "#00f2ff" : 
-                                    index === 1 ? "#7000ff" : 
-                                    index === 2 ? "#00d9a0" : "#ffc107"
+                    backgroundColor: index === 0 ? "#00f2ff" :
+                      index === 1 ? "#7000ff" :
+                        index === 2 ? "#00d9a0" : "#ffc107"
                   }}
                 />
               </div>

@@ -1,11 +1,25 @@
 import { Button } from "@/components/ui/button";
 import { Download, FileText, Package } from "lucide-react";
+import { generateEvidencePack } from "@/utils/evidenceGenerator";
 
-export const EvidencePack = () => {
+interface EvidencePackProps {
+    result?: any;
+}
+
+export const EvidencePack = ({ result }: EvidencePackProps) => {
+    const handleDownload = () => {
+        generateEvidencePack({
+            caseId: `CASE-${Math.floor(Math.random() * 10000)}`,
+            timestamp: new Date().toISOString(),
+            userName: "Current User",
+            analysisResult: result
+        });
+    };
+
     return (
         <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
-                <Button variant="outline" className="h-auto py-3 justify-start gap-3">
+                <Button variant="outline" className="h-auto py-3 justify-start gap-3" onClick={handleDownload}>
                     <div className="p-2 bg-primary/10 rounded">
                         <FileText className="w-4 h-4 text-primary" />
                     </div>
@@ -15,7 +29,7 @@ export const EvidencePack = () => {
                     </div>
                 </Button>
 
-                <Button variant="outline" className="h-auto py-3 justify-start gap-3">
+                <Button variant="outline" className="h-auto py-3 justify-start gap-3" onClick={handleDownload}>
                     <div className="p-2 bg-secondary/10 rounded">
                         <Package className="w-4 h-4 text-secondary" />
                     </div>
@@ -26,7 +40,10 @@ export const EvidencePack = () => {
                 </Button>
             </div>
 
-            <Button className="w-full gap-2 bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity">
+            <Button
+                className="w-full gap-2 bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity"
+                onClick={handleDownload}
+            >
                 <Download className="w-4 h-4" />
                 Download Complete Forensic Pack
             </Button>

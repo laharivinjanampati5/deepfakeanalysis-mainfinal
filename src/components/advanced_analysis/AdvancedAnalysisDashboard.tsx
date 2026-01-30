@@ -84,7 +84,7 @@ export const AdvancedAnalysisDashboard = ({ result }: AdvancedAnalysisDashboardP
                     icon={FileText}
                     description="Generate legally admissible reports and raw analysis logs."
                 >
-                    <EvidencePack />
+                    <EvidencePack result={result} />
                 </FeatureCard>
             </div>
         </motion.div>
