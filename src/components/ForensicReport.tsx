@@ -37,6 +37,7 @@ interface ForensicReportProps {
     temporalScore: number;
     biologicalScore: number;
     frequencyScore: number;
+    detectedArtifacts?: string[];
   };
 }
 
@@ -99,7 +100,9 @@ export const ForensicReport = ({ result }: ForensicReportProps) => {
             </div>
             <div>
               <h2 className={`text-2xl font-bold ${result.isDeepfake ? "text-destructive" : "text-success"}`}>
-                {result.isDeepfake ? "DEEPFAKE DETECTED" : "AUTHENTIC MEDIA"}
+                {result.isDeepfake
+                  ? (result.detectedArtifacts?.[0]?.toUpperCase() + " DETECTED" || "DEEPFAKE DETECTED")
+                  : "AUTHENTIC MEDIA"}
               </h2>
               <p className="text-muted-foreground">
                 Confidence: <span className="text-foreground font-semibold">{result.confidence}%</span>

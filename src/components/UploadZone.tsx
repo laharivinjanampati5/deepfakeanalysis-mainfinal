@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 interface UploadZoneProps {
   onFileSelect: (file: File) => void;
   isAnalyzing: boolean;
+  loadingText?: string;
 }
 
-export const UploadZone = ({ onFileSelect, isAnalyzing }: UploadZoneProps) => {
+export const UploadZone = ({ onFileSelect, isAnalyzing, loadingText }: UploadZoneProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -37,7 +38,7 @@ export const UploadZone = ({ onFileSelect, isAnalyzing }: UploadZoneProps) => {
   const handleFile = (file: File) => {
     if (file.type.startsWith("image/") || file.type.startsWith("video/")) {
       setSelectedFile(file);
-      
+
       if (file.type.startsWith("image/")) {
         const reader = new FileReader();
         reader.onload = (e) => setPreview(e.target?.result as string);
@@ -80,8 +81,8 @@ export const UploadZone = ({ onFileSelect, isAnalyzing }: UploadZoneProps) => {
             onDragOver={handleDrag}
             onDrop={handleDrop}
             className={`relative border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300 cursor-pointer group
-              ${isDragging 
-                ? "border-primary bg-primary/10 glow-cyan" 
+              ${isDragging
+                ? "border-primary bg-primary/10 glow-cyan"
                 : "border-muted hover:border-primary/50 hover:bg-muted/20"
               }`}
           >
@@ -100,9 +101,8 @@ export const UploadZone = ({ onFileSelect, isAnalyzing }: UploadZoneProps) => {
               className="mb-6"
             >
               <div className="relative inline-block">
-                <Upload className={`w-16 h-16 mx-auto transition-colors duration-300 ${
-                  isDragging ? "text-primary" : "text-muted-foreground group-hover:text-primary"
-                }`} />
+                <Upload className={`w-16 h-16 mx-auto transition-colors duration-300 ${isDragging ? "text-primary" : "text-muted-foreground group-hover:text-primary"
+                  }`} />
                 {isDragging && (
                   <motion.div
                     initial={{ scale: 0 }}
@@ -152,7 +152,7 @@ export const UploadZone = ({ onFileSelect, isAnalyzing }: UploadZoneProps) => {
                     <FileVideo className="w-12 h-12 text-muted-foreground" />
                   </div>
                 )}
-                
+
                 {isAnalyzing && (
                   <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
                     <div className="scan-line" />
@@ -172,7 +172,7 @@ export const UploadZone = ({ onFileSelect, isAnalyzing }: UploadZoneProps) => {
                       {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
                     </p>
                   </div>
-                  
+
                   {!isAnalyzing && (
                     <button
                       onClick={clearSelection}
@@ -192,7 +192,7 @@ export const UploadZone = ({ onFileSelect, isAnalyzing }: UploadZoneProps) => {
                     {isAnalyzing ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Analyzing...
+                        {loadingText || "Analyzing..."}
                       </>
                     ) : (
                       <>

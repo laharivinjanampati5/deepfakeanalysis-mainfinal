@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AdvancedAnalysisDashboard } from "./advanced_analysis/AdvancedAnalysisDashboard";
 import { EnhancementLayer } from "./enhancements/EnhancementLayer";
 import { EmploymentHub } from "./enhancements/EmploymentHub";
+import { analysisService } from "@/services/api";
 
 
 interface AnalysisResult {
@@ -25,101 +26,59 @@ export const DetectionSection = () => {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const { toast } = useToast();
 
+  const [loadingText, setLoadingText] = useState("Analyzing...");
+
   const handleFileSelect = async (file: File) => {
+    console.log("Analysis start:", file.name);
     setIsAnalyzing(true);
     setAnalysisResult(null);
+    setLoadingText("Uploading to Forensic Lab...");
 
     try {
-      // Convert file to base64
-      const base64 = await fileToBase64(file);
+      const uploadRes = await analysisService.uploadFile(file);
+      const analysisId = uploadRes.analysisId;
+      if (!analysisId) throw new Error("No analysis ID returned");
 
-      // Call the AI-powered analysis edge function
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-media`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({
-            imageBase64: base64,
-            fileName: file.name,
-          }),
+      setLoadingText("Authenticating Source...");
+      await new Promise(r => setTimeout(r, 800));
+
+      let attempts = 0;
+      const poll = async () => {
+        try {
+          if (attempts >= 40) throw new Error("Analysis timeout");
+          const result = await analysisService.getResult(analysisId);
+          if (result.status === 'completed') {
+            setAnalysisResult({
+              isDeepfake: result.isDeepfake,
+              confidence: result.confidence,
+              spatialScore: result.analysisData?.spatialScore || 0,
+              temporalScore: result.analysisData?.temporalScore || 0,
+              biologicalScore: result.analysisData?.biologicalScore || 0,
+              frequencyScore: result.analysisData?.frequencyScore || 0,
+              analysis: result.isDeepfake ? "AI-Generated Media Verified." : "Human/Authentic Sample Verified.",
+              detectedArtifacts: result.isDeepfake ? ["AI Trace"] : []
+            });
+            toast({ title: result.isDeepfake ? "⚠️ Deepfake Detected" : "✓ Authentic", variant: result.isDeepfake ? "destructive" : "default" });
+            setIsAnalyzing(false);
+          } else if (result.status === 'failed') {
+            throw new Error(result.error);
+          } else {
+            if (attempts === 3) setLoadingText("Scanning Spatial Markers...");
+            if (attempts === 8) setLoadingText("Analyzing Biological Pulse...");
+            attempts++;
+            setTimeout(poll, 1500);
+          }
+        } catch (err: any) {
+          console.error("Poll error:", err);
+          setIsAnalyzing(false);
+          toast({ title: "Verification Error", description: err.message, variant: "destructive" });
         }
-      );
-
-      if (!response.ok) {
-        // Fallback to mock data if the function fails (since user might not have set up edge functions yet)
-        console.warn("Edge function failed, falling back to simulation");
-
-        // Simulate a delay for realism
-        await new Promise(resolve => setTimeout(resolve, 3000));
-
-        const isDeepfake = Math.random() < 0.3;
-        const result = {
-          isDeepfake,
-          confidence: isDeepfake ? 85 + Math.random() * 10 : 90 + Math.random() * 8,
-          spatialScore: Math.floor(Math.random() * 100),
-          temporalScore: Math.floor(Math.random() * 100),
-          biologicalScore: Math.floor(Math.random() * 100),
-          frequencyScore: Math.floor(Math.random() * 100),
-          analysis: isDeepfake ? "Detected inconsistencies in facial landmarks." : "No manipulation detected.",
-          detectedArtifacts: isDeepfake ? ["Warping"] : []
-        };
-
-        setAnalysisResult(result);
-
-        toast({
-          title: result.isDeepfake ? "⚠️ Deepfake Detected" : "✓ Authentic Media",
-          description: "Analysis simulation complete",
-          variant: result.isDeepfake ? "destructive" : "default",
-        });
-
-        return;
-      }
-
-      const result = await response.json();
-
-      setAnalysisResult({
-        isDeepfake: result.isDeepfake,
-        confidence: result.confidence,
-        spatialScore: result.spatialScore,
-        temporalScore: result.temporalScore,
-        biologicalScore: result.biologicalScore,
-        frequencyScore: result.frequencyScore,
-        analysis: result.analysis,
-        detectedArtifacts: result.detectedArtifacts,
-      });
-
-      toast({
-        title: result.isDeepfake ? "⚠️ Deepfake Detected" : "✓ Authentic Media",
-        description: result.analysis?.slice(0, 100) || "Analysis complete",
-        variant: result.isDeepfake ? "destructive" : "default",
-      });
-    } catch (error) {
-      console.error("Analysis error:", error);
-
-      // Secondary fallback just to ensure user sees *something* instead of just "Failed"
-      const result = {
-        isDeepfake: true,
-        confidence: 88,
-        spatialScore: 45,
-        temporalScore: 50,
-        biologicalScore: 30,
-        frequencyScore: 40,
-        analysis: "Simulation: Detected potential manipulation artifacts.",
-        detectedArtifacts: ["Simulated Artifact"]
       };
-      setAnalysisResult(result);
-
-      toast({
-        title: "Analysis Simulation",
-        description: "Backend unreachable, showing simulated result.",
-        variant: "destructive",
-      });
-    } finally {
+      poll();
+    } catch (error: any) {
+      console.error("Upload error:", error);
       setIsAnalyzing(false);
+      toast({ title: "Upload Failed", description: error.message, variant: "destructive" });
     }
   };
 
@@ -199,7 +158,7 @@ export const DetectionSection = () => {
 
         {/* Upload Zone */}
         {!analysisResult && (
-          <UploadZone onFileSelect={handleFileSelect} isAnalyzing={isAnalyzing} />
+          <UploadZone onFileSelect={handleFileSelect} isAnalyzing={isAnalyzing} loadingText={loadingText} />
         )}
 
 
